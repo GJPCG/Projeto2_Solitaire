@@ -71,14 +71,14 @@ class Solitaire(ft.Stack):
 
     def create_slots(self):
 
-        self.stock = Slot(solitaire=self, slot_type="stock", top=0, left=0, border=ft.border.all(1))
+        self.stock = Slot(solitaire=self, slot_type="stock", top=0, left=0, border=ft.Border.all(1))
         self.waste = Slot(solitaire=self, slot_type="waste", top=0, left=100, border=None)
 
         self.foundations = []
 
         x = 300
         for i in range(4):
-            self.foundations.append(Slot(solitaire=self, slot_type="foundation", top=0, left=x, border=ft.border.all(1, "outline"),))
+            self.foundations.append(Slot(solitaire=self, slot_type="foundation", top=0, left=x, border=ft.Border.all(1, "outline"),))
             x += 100
 
         self.tableau = []

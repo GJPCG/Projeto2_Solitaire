@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.14"
 # dependencies = [
-#     "flet[all]>=0.80.5",
+#     "flet[all]>=0.81.0",
 # ]
 # ///
 

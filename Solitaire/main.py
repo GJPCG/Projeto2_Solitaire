@@ -12,8 +12,6 @@ from settings import Settings
 from layout import create_appbar
 
 def main(page: ft.Page):
-    page.theme_mode = ft.ThemeMode.DARK
-    page.web_renderer = ft.WebRenderer.HTML
     def on_new_game(settings):
         page.controls.pop()
         new_solitaire = Solitaire(settings, on_win)
@@ -39,4 +37,4 @@ def main(page: ft.Page):
 
     page.on_error = lambda e: print("Page error:", e.data)
 
-ft.app(main, assets_dir="assets")
+ft.run(main, assets_dir="assets")

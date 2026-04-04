@@ -21,8 +21,8 @@ class SettingsDialog(ft.AlertDialog):
             value=self.settings.waste_size,
             content=ft.Row(
                 controls=[
-                    ft.Radio(value=1, label="One card"),
-                    ft.Radio(value=3, label="Three cards"),
+                    ft.Radio(value="1", label="One card"),
+                    ft.Radio(value="3", label="Three cards"),
                 ]
             ),
         )
@@ -30,8 +30,8 @@ class SettingsDialog(ft.AlertDialog):
             value=self.settings.deck_passes_allowed,
             content=ft.Row(
                 controls=[
-                    ft.Radio(value=3, label="Three"),
-                    ft.Radio(value=1000, label="Unlimited"),
+                    ft.Radio(value="3", label="Three"),
+                    ft.Radio(value="1000", label="Unlimited"),
                 ]
             ),
         )

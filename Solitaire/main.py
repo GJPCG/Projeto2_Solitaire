@@ -19,6 +19,36 @@ def main(page: ft.Page):
     page.padding = 0
     page.spacing = 0
 
+    def trigger_bsod(page, solitaire):
+        solitaire.stop_timer()
+        
+        bsod_layout = ft.Container(
+            expand=True,
+            bgcolor="#0078D7", # Azul clássico do Windows
+            padding=ft.padding.all(50),
+            content=ft.Column([ft.Text(":(", size=120, color=ft.Colors.WHITE, weight=ft.FontWeight.W_400),
+                ft.Text("O seu jogo de Solitário deparou-se com um problema e precisa de ser reiniciado.",
+                    size=30, color=ft.Colors.WHITE, weight=ft.FontWeight.W_300
+                ),ft.Text("Estamos apenas a recolher algumas informações de erro (0% concluído).",
+                    size=20, color=ft.Colors.WHITE
+                ),ft.Container(height=40),
+                ft.Row([
+                    ft.Image(
+                        src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://flet.dev", 
+                        width=120
+                    ), ft.Column([
+                        ft.Text("Para mais informações sobre este erro, visite:", color=ft.Colors.WHITE, size=14),
+                        ft.Text("https://flet.dev/docs/controls/gesturedetector", color=ft.Colors.WHITE, size=14),
+                        ft.Text("Stop Code: SCORE_CLICK_OVERFLOW", color=ft.Colors.WHITE, size=12, weight=ft.FontWeight.BOLD),
+                    ], spacing=5)], vertical_alignment=ft.CrossAxisAlignment.START)], spacing=20, alignment=ft.MainAxisAlignment.CENTER)
+        )
+
+        page.controls.clear()
+        page.appbar = None
+        page.bgcolor = "#0078D7"
+        page.add(bsod_layout)
+        page.update()
+
     def update_stats():
         # Atualiza os textos da AppBar com os dados do objeto solitaire
         if solitaire and hasattr(solitaire, "timer_text"):
@@ -73,7 +103,7 @@ def main(page: ft.Page):
         solitaire = new_solitaire
         solitaire.on_stats_change = update_stats
         
-        create_appbar(page, settings, on_new_game, solitaire)
+        create_appbar(page, settings, on_new_game, solitaire, trigger_bsod)
         page.appbar.actions[0].on_click = lambda e: solitaire.save_game()
         page.appbar.actions[1].on_click = lambda e: solitaire.load_game()
         page.appbar.actions[2].on_click = lambda e: solitaire.undo_move()
@@ -99,7 +129,7 @@ def main(page: ft.Page):
     solitaire.on_stats_change = update_stats
     
     # Cria a barra de topo (ajusta conforme a tua implementação de layout.py)
-    create_appbar(page, settings, on_new_game, solitaire)
+    create_appbar(page, settings, on_new_game, solitaire, trigger_bsod)
     
     page.add(solitaire)
 

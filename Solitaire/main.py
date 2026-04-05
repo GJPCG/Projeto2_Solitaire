@@ -24,17 +24,17 @@ def main(page: ft.Page):
             scale_w = page.width / SOLITAIRE_WIDTH
             scale_h = available_height / SOLITAIRE_HEIGHT
 
-            # Mantém a proporção e não deixa crescer além do tamanho real
+           
             scale_factor = min(scale_w, scale_h, 1.0)
             solitaire.scale = scale_factor
             
-            # Diferenciação de plataformas para não "foder" o layout
+            
             if page.platform == ft.PagePlatform.IOS:
-                # Valores que ficaram perfeitos no teu iPhone
+               
                 solitaire.offset = ft.Offset(-0.1, -0.2) 
                 solitaire.alignment = ft.Alignment(-1, -1)
             else:
-                # Valores padrão para Desktop/Web (centrado e sem desvio)
+              
                 solitaire.offset = ft.Offset(0, 0) 
                 solitaire.alignment = ft.Alignment(0, 0)
                 

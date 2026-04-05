@@ -50,9 +50,9 @@ def main(page: ft.Page):
     page.on_resize = handle_resize
     
     settings = Settings()
-    create_appbar(page, settings, on_new_game)
-
     solitaire = Solitaire(settings, on_win)
+    
+    create_appbar(page, settings, on_new_game, solitaire)
     page.add(solitaire)
 
     page.on_error = lambda e: print("Page error:", e.data)

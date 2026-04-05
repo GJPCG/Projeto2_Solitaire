@@ -38,6 +38,9 @@ class Solitaire(ft.Stack):
         self.deck_passes_remaining = int(self.settings.deck_passes_allowed)
         self.controls = []
         self.on_win = on_win
+
+        self.history = []
+        self.original_order = []
     
     def did_mount(self):
         self.create_card_deck()
@@ -100,6 +103,7 @@ class Solitaire(ft.Stack):
 
     def deal_cards(self):
         random.shuffle(self.cards)
+        self.original_order = list(self.cards)
         self.controls.extend(self.cards)
 
         first_slot = 0
@@ -123,11 +127,13 @@ class Solitaire(ft.Stack):
 
         self.update()
 
-    def move_on_top(self, cards_to_drag):
+    def move_on_top(self, cards_to_drag, update=True):
         for card in cards_to_drag:
-            self.controls.remove(card)
+            if card in self.controls:
+                self.controls.remove(card)
             self.controls.append(card)
-        self.update()
+        if update:
+            self.update()
 
     def bounce_back(self, cards):
         i = 0
@@ -160,12 +166,14 @@ class Solitaire(ft.Stack):
         self.update()
 
     def restart_stock(self):
-        self.waste.pile.reverse()
-        while len(self.waste.pile) > 0:
-            card = self.waste.pile[0]
-            card.turn_face_down()
-            card.place(self.stock)
-        self.update()
+        if len(self.waste.pile) > 0:
+            self.record_move(self.waste.pile[:], self.waste, self.stock)
+            self.waste.pile.reverse()
+            while len(self.waste.pile) > 0:
+                card = self.waste.pile[0]
+                card.turn_face_down()
+                card.place(self.stock)
+            self.update()
 
     def check_foundation_rules(self, current_card, top_card=None):
         if top_card is not None:
@@ -192,3 +200,44 @@ class Solitaire(ft.Stack):
         if cards_num == 52:
             return True
         return False
+    
+    def record_move(self, cards, source_slot, destination_slot, revealed_card=None):
+        move = {
+            "cards": list(cards), 
+            "from": source_slot,
+            "to": destination_slot,
+            "revealed": revealed_card 
+        }
+        self.history.append(move)
+        print(f"Move Recorded! History size: {len(self.history)}")
+
+    def undo_move(self, update=True):
+        if not self.history:
+            print("No moves to undo!")
+            return
+        
+        last_move = self.history.pop()
+        
+        if last_move["revealed"]:
+            last_move["revealed"].turn_face_down()
+
+        for card in last_move["cards"]:
+            card.place(last_move["from"], False)
+
+        if last_move["from"].type == "stock":
+            card.turn_face_down()
+            card.left = last_move["from"].left
+            card.top = last_move["from"].top
+            card.visible = True
+
+        if last_move["from"].type == "waste" or last_move["to"].type == "waste":
+            self.display_waste()
+        
+        self.update()
+
+    def restart_game(self):
+        if not self.history:
+            return
+        while len(self.history) > 0:
+            self.undo_move(False)
+        self.update()

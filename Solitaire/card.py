@@ -52,8 +52,8 @@ class Card(ft.GestureDetector):
         return False
 
 
-    def place(self, slot):
-        if self.slot is not None:
+    def place(self, slot, update=True):
+        if self.slot is not None and self in self.slot.pile:
             self.slot.pile.remove(self)
 
         self.slot = slot
@@ -65,12 +65,13 @@ class Card(ft.GestureDetector):
             index = slot.pile.index(self)
             self.top += self.solitaire.card_offset * index
 
-        self.solitaire.move_on_top([self])
+        self.solitaire.move_on_top([self], False)
 
         if self.solitaire.check_if_you_won():
             self.solitaire.on_win()
         
-        self.solitaire.update()
+        if update:
+            self.solitaire.update()
 
     def start_drag(self, e: ft.DragStartEvent):
         if self.can_be_moved():
@@ -117,6 +118,15 @@ class Card(ft.GestureDetector):
                         )
                     ):
                         old_slot = self.slot
+                        revealed_card = None
+
+                        if old_slot.type == "tableau" and len(old_slot.pile) > len(cards_to_drag):
+                            potential_card = old_slot.pile[-(len(cards_to_drag) + 1)]
+                            if not potential_card.face_up:
+                                revealed_card = potential_card
+                        
+                        self.solitaire.record_move(cards_to_drag, old_slot, slot, revealed_card)
+
                         for card in cards_to_drag:
                             card.place(slot)
                             
@@ -135,6 +145,9 @@ class Card(ft.GestureDetector):
         if self.slot.type == "stock":
             # first, set the current top 3 cards to invisible
             num_to_flip = min(self.solitaire.settings.waste_size, len(self.solitaire.stock.pile))
+
+            cards_to_move = self.solitaire.stock.pile[-num_to_flip:]
+            self.solitaire.record_move(cards_to_move, self.solitaire.stock, self.solitaire.waste)
 
             for _ in range(num_to_flip):
                 if len(self.solitaire.stock.pile) > 0:
@@ -160,11 +173,21 @@ class Card(ft.GestureDetector):
                 old_slot = self.slot
                 for slot in self.solitaire.foundations:
                     if self.solitaire.check_foundation_rules(self, slot.get_top_card()):
-                        # if True:
+                        
+                        revealed_card = None
+
+                        if old_slot.type == "tableau" and len(old_slot.pile) > 1:
+                            potential_card = old_slot.pile[-2]
+                            if not potential_card.face_up:
+                                revealed_card = potential_card
+                        
+                        self.solitaire.record_move([self], old_slot, slot, revealed_card)
+
                         self.place(slot)
-                        # if len(old_slot.pile) > 0:
-                        # old_slot.get_top_card().turn_face_up()
-                        # self.solitaire.display_waste()
+
+                        if revealed_card:
+                            revealed_card.turn_face_up()
+
                         self.solitaire.update()
                         return
                     

@@ -349,4 +349,42 @@ class Solitaire(ft.Stack):
         self.controls = [self.stock, self.waste] + self.foundations + self.tableau + self.cards
         self.update()
         print("Game Loaded!")
-        
+
+    def move_to_tableau(self, cards_to_drag, update=True):
+        slots = self.solitaire.tableau + self.solitaire.foundations
+
+        for slot in slots:
+            if (
+                abs(self.top - slot.upper_card_top()) < 40
+                and abs(self.left - slot.left) < 40
+            ):
+                if (
+                    slot.type == "tableau"
+                    and self.solitaire.check_tableau_rules(self, slot.get_top_card())
+                ) or (
+                    slot.type == "foundation"
+                    and len(cards_to_drag) == 1
+                    and self.solitaire.check_foundation_rules(self, slot.get_top_card())
+                ):
+                    old_slot = self.slot
+                    revealed_card = None
+
+                    if old_slot.type == "tableau" and len(old_slot.pile) > len(cards_to_drag):
+                        potential_card = old_slot.pile[-(len(cards_to_drag) + 1)]
+                        if not potential_card.face_up:
+                            revealed_card = potential_card
+
+                    self.solitaire.record_move(cards_to_drag, old_slot, slot, revealed_card)
+
+                    for card in cards_to_drag:
+                        card.place(slot)
+
+                    if len(old_slot.pile) > 0 and old_slot.type == "tableau":
+                        old_slot.get_top_card().turn_face_up()
+                    elif old_slot.type == "waste":
+                        self.solitaire.display_waste()
+                    self.solitaire.update()
+                    return
+
+        self.solitaire.bounce_back(cards_to_drag)
+        self.solitaire.update()

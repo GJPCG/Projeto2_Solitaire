@@ -37,20 +37,27 @@ class SettingsDialog(ft.AlertDialog):
         )
         self.generate_card_backs()
 
-        self.content = ft.Column(
-            controls=[
-                ft.Text("Waste pile size:"),
-                self.waste_size,
-                ft.Text("Passes through the deck:"),
-                self.deck_passes_allowed,
-                ft.Row(controls=self.card_backs),
-                ft.Checkbox(
-                    label="New game will be started when settings are updated.",
-                    value=True,
-                    disabled=True,
-                ),
-            ],
-            tight=True,
+        # Use ListView for scrollable content (works with older Flet versions)
+        self.content = ft.Container(
+            width=520,
+            content=ft.ListView(
+                controls=[
+                    ft.Text("Waste pile size:"),
+                    self.waste_size,
+                    ft.Text("Passes through the deck:"),
+                    self.deck_passes_allowed,
+                    ft.Row(controls=self.card_backs),
+                    ft.Checkbox(
+                        label="New game will be started when settings are updated.",
+                        value=True,
+                        disabled=True,
+                    ),
+                ],
+                spacing=8,
+                padding=10,
+                height=480,
+            ),
+            padding=0,
         )
         self.actions = [
             ft.TextButton("Cancel", on_click=self.cancel),

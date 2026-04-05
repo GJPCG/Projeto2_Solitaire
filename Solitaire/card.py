@@ -6,6 +6,7 @@ CARD_OFFSET = 20
 
 
 import flet as ft
+import time
 
 class Card(ft.GestureDetector):
     def __init__(self, solitaire, suite, rank):
@@ -25,6 +26,9 @@ class Card(ft.GestureDetector):
         self.on_pan_end=self.drop
         self.on_tap = self.click
         self.on_double_tap = self.doubleclick
+        self._drag_cached_cards = None
+        self._last_drag_update = 0.0
+        self._drag_throttle_ms = 50  # ms — aumentado para reduzir chamadas de render no mobile
         self.content=ft.Container(
             width= CARD_WIDTH,
             height= CARD_HEIGHT,
@@ -74,30 +78,36 @@ class Card(ft.GestureDetector):
 
     def start_drag(self, e: ft.DragStartEvent):
         if self.can_be_moved():
-            cards_to_drag = self.get_cards_to_move()
-            self.solitaire.move_on_top(cards_to_drag)
-            
+            self._drag_cached_cards = self.get_cards_to_move()
+            self.solitaire.move_on_top(self._drag_cached_cards)
             self.solitaire.current_top = e.control.top
             self.solitaire.current_left = e.control.left
+            self._last_drag_update = time.time() * 1000
             self.solitaire.update()
 
     def drag(self, e: ft.DragUpdateEvent):
-        if self.can_be_moved():
+        if self.can_be_moved() and self._drag_cached_cards:
+            now = time.time() * 1000
+            
             i = 0
-            for card in self.get_cards_to_move():
+            for card in self._drag_cached_cards:
                 card.top = max(0, self.top + e.local_delta.y)
                 if card.slot.type == "tableau":
                     card.top += i * self.solitaire.card_offset
                 card.left = max(0, self.left + e.local_delta.x)
                 i += 1
 
-            self.solitaire.update()
+            if now - self._last_drag_update >= self._drag_throttle_ms:
+                self._last_drag_update = now
+                self.solitaire.update()
 
     def drop(self, e: ft.DragEndEvent):
         if self.can_be_moved():
-            cards_to_drag = self.get_cards_to_move()
+            cards_to_drag = self._drag_cached_cards or self.get_cards_to_move()
+            self._drag_cached_cards = None
+
             slots = self.solitaire.tableau + self.solitaire.foundations
-            
+
             for slot in slots:
                 if (abs(self.top - slot.upper_card_top()) < 40 and abs(self.left - slot.left) < 40):
                     if (
@@ -117,18 +127,17 @@ class Card(ft.GestureDetector):
                             potential_card = old_slot.pile[-(len(cards_to_drag) + 1)]
                             if not potential_card.face_up:
                                 revealed_card = potential_card
-                        
+
                         self.solitaire.record_move(cards_to_drag, old_slot, slot, revealed_card)
 
                         for card in cards_to_drag:
                             card.place(slot)
-                            
+
                         if len(old_slot.pile) > 0 and old_slot.type == "tableau":
                             old_slot.get_top_card().turn_face_up()
                         elif old_slot.type == "waste":
                             self.solitaire.display_waste()
                         self.solitaire.update()
-
                         return
 
             self.solitaire.bounce_back(cards_to_drag)
@@ -189,3 +198,9 @@ class Card(ft.GestureDetector):
             return self.slot.pile[self.slot.pile.index(self) :]
 
         return [self]
+
+    def _update_drag_cache(self):
+        if self._drag_cached_cards is not None:
+            self._drag_cached_cards = None
+        self._drag_cached_cards = self.get_cards_to_move()
+        self._last_drag_update = time.time()

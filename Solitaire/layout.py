@@ -18,7 +18,16 @@ rules_md = ft.Markdown(
 
 rules_dialog = ft.AlertDialog(
     title=ft.Text("Solitaire rules"),
-    content=rules_md,
+    content=ft.Container(
+        width=520,
+        content=ft.ListView(
+            controls=[rules_md],
+            spacing=8,
+            padding=10,
+            height=480,
+        ),
+        padding=0,
+    ),
     on_dismiss=lambda e: print("Dialog dismissed!"),
 )
 

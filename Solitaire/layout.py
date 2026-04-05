@@ -32,6 +32,10 @@ rules_dialog = ft.AlertDialog(
 )
 
 def create_appbar(page, settings, on_new_game, solitaire):
+    solitaire.timer_text = ft.Text("00:00", weight=ft.FontWeight.BOLD)
+    solitaire.score_text = ft.Text("Score: 0", weight=ft.FontWeight.BOLD)
+    solitaire.moves_text = ft.Text("Moves: 0", weight=ft.FontWeight.BOLD)
+
     if rules_dialog not in page.overlay:
         page.overlay.append(rules_dialog)
     def new_game_clicked(e):
@@ -55,6 +59,15 @@ def create_appbar(page, settings, on_new_game, solitaire):
         title=ft.Text("Flet solitaire"),
         bgcolor=ft.Colors.SURFACE_CONTAINER_HIGHEST,
         actions=[
+            ft.Icon(ft.Icons.TIMER_OUTLINED, size=20),
+            solitaire.timer_text,
+            ft.VerticalDivider(),
+            ft.Icon(ft.Icons.STARS_OUTLINED, size=20),
+            solitaire.score_text,
+            ft.VerticalDivider(),
+            ft.Icon(ft.Icons.LEADERBOARD_OUTLINED, size=20),
+            solitaire.moves_text,
+
             ft.IconButton(icon=ft.Icons.SAVE_OUTLINED, tooltip="Save Game", on_click=lambda e: solitaire.save_game()),
             ft.IconButton(icon=ft.Icons.FILE_OPEN_OUTLINED, tooltip="Load Game", on_click=lambda e: solitaire.load_game()),
             ft.IconButton(icon=ft.Icons.UNDO, on_click=lambda e: solitaire.undo_move(), tooltip="Undo last move"),

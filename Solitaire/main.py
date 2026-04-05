@@ -7,6 +7,9 @@
 # ///
 
 import flet as ft
+import time
+import threading
+
 from settings import Settings
 from layout import create_appbar
 from solitaire import Solitaire, SOLITAIRE_WIDTH, SOLITAIRE_HEIGHT
@@ -15,6 +18,22 @@ def main(page: ft.Page):
     page.bgcolor = ft.Colors.GREEN_800
     page.padding = 0
     page.spacing = 0
+
+    def update_stats():
+        # Atualiza os textos da AppBar com os dados do objeto solitaire
+        if solitaire and hasattr(solitaire, "timer_text"):
+            mins, secs = divmod(solitaire.seconds_elapsed, 60)
+            solitaire.timer_text.value = f"{mins:02d}:{secs:02d}"
+            solitaire.score_text.value = f"Score: {solitaire.score}"
+            solitaire.moves_text.value = f"Moves: {len(solitaire.history)}"
+            page.update()
+
+    def tick_timer():
+        while True:
+            if solitaire.timer_running:
+                solitaire.seconds_elapsed += 1
+                update_stats()
+            time.sleep(1)
 
     def handle_resize(e):
         if page.width and page.height:
@@ -52,13 +71,16 @@ def main(page: ft.Page):
         
         # Atualizamos a referência para o handle_resize saber quem controlar
         solitaire = new_solitaire
+        solitaire.on_stats_change = update_stats
         
+        create_appbar(page, settings, on_new_game, solitaire)
         page.appbar.actions[0].on_click = lambda e: solitaire.save_game()
         page.appbar.actions[1].on_click = lambda e: solitaire.load_game()
         page.appbar.actions[2].on_click = lambda e: solitaire.undo_move()
         page.appbar.actions[3].on_click = lambda e: solitaire.restart_game()
 
         page.add(solitaire)
+        solitaire.start_timer()
         # Forçamos o redimensionamento para aplicar os offsets da plataforma
         handle_resize(None)
         
@@ -74,11 +96,18 @@ def main(page: ft.Page):
     # Inicialização
     settings = Settings()
     solitaire = Solitaire(settings, on_win)
+    solitaire.on_stats_change = update_stats
     
     # Cria a barra de topo (ajusta conforme a tua implementação de layout.py)
     create_appbar(page, settings, on_new_game, solitaire)
     
     page.add(solitaire)
+
+    thread = threading.Thread(target=tick_timer, daemon=True)
+    thread.start()
+
+    solitaire.start_timer() # Começa o primeiro jogo
+    handle_resize(None)
     
     # Primeira execução para ajustar ao tamanho inicial da janela
     handle_resize(None)

@@ -284,69 +284,64 @@ class Solitaire(ft.Stack):
             print("No save found!")
             return
         
-        print(f"Current Deck Size: {len(self.cards)}")
-        # print(f"Available IDs: {list(id_map.keys())[:5]}...")
+        self.controls.clear()
+        self.update()
+
+        self.create_card_deck()
+        self.create_slots()
+
+        self.original_order = data.get("original_order", [])
+        self.history = []
         
         id_map = {card.id: card for card in self.cards}
-
-
-        missing_ids = []
-        for card_id in data["original_order"]:
-            clean_id = card_id.strip().lower()
-            if clean_id not in id_map:
-                missing_ids.append(clean_id)
-        
-        if missing_ids:
-            print(f"FATAL ERROR: The following cards are missing from the current deck: {missing_ids}")
-            print(f"First 10 IDs in memory: {list(id_map.keys())[:10]}")
-            return
-
         self.original_order = [id_map[card_id.strip().lower()] for card_id in data["original_order"]]
+        slot_map = {s.name: s for s in [self.stock, self.waste] + self.tableau + self.foundations}
+        self.cards = list(self.original_order)
 
-        for slot in [self.stock, self.waste] + self.tableau + self.foundations:
-            slot.pile.clear()
-
-        self.history = []
-        temp_cards = list(self.original_order)
-        
+        self.controls.extend(self.cards)
+        remaining_cards = list(self.cards)
         first_slot = 0
         while first_slot < len(self.tableau):
             for slot in self.tableau[first_slot:]:
-                top_card = temp_cards.pop(0)
+                top_card = remaining_cards.pop(0)
                 top_card.place(slot, update=False)
-                top_card.turn_face_down() # Reset to face down
+                top_card.turn_face_down()
             first_slot += 1
 
-        for card in temp_cards:
-            card.place(self.stock, update=False)
-            card.turn_face_down()
+
+        for card in remaining_cards:
+            card.place(self.stock, False)
+        self.update()
 
         for slot in self.tableau:
             if slot.pile:
                 slot.get_top_card().turn_face_up()
+        self.update()
+        
 
-        all_slots = {s.name: s for s in [self.stock, self.waste] + self.tableau + self.foundations}
-
-        for move in data["history"]:
+        for move in data.get("history", []):
+            if "card_ids" not in move:
+                print(f"Skipping a move because it lacks card_ids: {move}")
+                continue
             cards_to_move = [id_map[c_id] for c_id in move["card_ids"]]
-            dest_slot = all_slots[move["to"]]
-            source_slot = all_slots[move["from"]]
-
+            dest_slot = slot_map[move["to"]]
+            source_slot = slot_map[move["from"]]
+            
             for card in cards_to_move:
-                card.place(dest_slot, False)
-                if dest_slot.type == "waste":
-                    card.turn_face_up()
-                elif dest_slot.type == "stock":
-                    card.turn_face_down()
+                card.place(dest_slot, update=False)
+                if dest_slot.type == "waste": card.turn_face_up()
+                elif dest_slot.type == "stock": card.turn_face_down()
 
             revealed_card = None
             if move["revealed_id"]:
                 revealed_card = id_map[move["revealed_id"]]
                 revealed_card.turn_face_up()
+
             self.record_move(cards_to_move, source_slot, dest_slot, revealed_card)
 
+        self.controls.clear()
+        self.controls.extend([self.stock, self.waste] + self.foundations + self.tableau + self.cards)
         self.display_waste()
-        self.controls = [self.stock, self.waste] + self.foundations + self.tableau + self.cards
         self.update()
         print("Game Loaded!")
         

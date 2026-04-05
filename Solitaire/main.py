@@ -53,9 +53,15 @@ def main(page: ft.Page):
         # Atualizamos a referência para o handle_resize saber quem controlar
         solitaire = new_solitaire
         
+        page.appbar.actions[0].on_click = lambda e: solitaire.save_game()
+        page.appbar.actions[1].on_click = lambda e: solitaire.load_game()
+        page.appbar.actions[2].on_click = lambda e: solitaire.undo_move()
+        page.appbar.actions[3].on_click = lambda e: solitaire.restart_game()
+
         page.add(solitaire)
         # Forçamos o redimensionamento para aplicar os offsets da plataforma
         handle_resize(None)
+        
 
     def on_win():
         page.dialog = ft.AlertDialog(title=ft.Text("YOU WIN!"))

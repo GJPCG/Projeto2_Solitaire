@@ -16,7 +16,7 @@ class Card(ft.GestureDetector):
         self.face_up=False
         self.slot= None
 
-        self.id = f"{str(suite.name).lower()}_{str(rank.value)}"
+        self.id = f"{str(rank.value)}_{str(suite.name).lower()}"
 
         self.mouse_cursor=ft.MouseCursor.MOVE
         self.drag_interval=5
@@ -41,19 +41,15 @@ class Card(ft.GestureDetector):
 
     def turn_face_down(self):
         self.face_up = False
-        # self.content.content.src=f"/images/card_back.svg"
         self.content.content.src = self.solitaire.settings.card_back
         self.solitaire.update()
     
     def can_be_moved(self):
         if self.face_up and self.slot.type != "waste":
             return True
-        if self.slot.type == "waste" and len(
-            self.solitaire.waste.pile
-        ) - 1 == self.solitaire.waste.pile.index(self):
+        if self.slot.type == "waste" and len(self.solitaire.waste.pile) - 1 == self.solitaire.waste.pile.index(self):
             return True
         return False
-
 
     def place(self, slot, update=True):
         if self.slot is not None and self in self.slot.pile:
@@ -85,9 +81,8 @@ class Card(ft.GestureDetector):
             self.solitaire.current_left = e.control.left
             self.solitaire.update()
 
-
     def drag(self, e: ft.DragUpdateEvent):
-         if self.can_be_moved():
+        if self.can_be_moved():
             i = 0
             for card in self.get_cards_to_move():
                 card.top = max(0, self.top + e.local_delta.y)
@@ -104,22 +99,17 @@ class Card(ft.GestureDetector):
             slots = self.solitaire.tableau + self.solitaire.foundations
             
             for slot in slots:
-                if (
-                    abs(self.top - slot.upper_card_top()) < 40
-                    and abs(self.left - slot.left) < 40
-                ):
+                if (abs(self.top - slot.upper_card_top()) < 40 and abs(self.left - slot.left) < 40):
                     if (
                         slot.type == "tableau"
                         and self.solitaire.check_tableau_rules(
-                            self, slot.get_top_card()
-                        )
+                            self, slot.get_top_card())
                     ) or (
                         slot.type == "foundation"
                         and len(cards_to_drag) == 1
                         and self.solitaire.check_foundation_rules(
                             self, slot.get_top_card()
-                        )
-                    ):
+                        )):
                         old_slot = self.slot
                         revealed_card = None
 
